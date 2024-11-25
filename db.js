@@ -22,7 +22,7 @@ const dbLoginCheck = async (email, password) => {
                 let token = jwt.sign(
                     { userId: result[0].uuid },
                     process.env.JWT_SECRET,
-                    { expiresIn: 60 * 60 }
+                    { expiresIn: 60 * 5 }
                 );
                 return {
                     status: '200',
