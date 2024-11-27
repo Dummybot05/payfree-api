@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 config();
 
+
 const sql = neon(process.env.DATABASE_URL);
 
 const dbLoginCheck = async (email, password) => {

@@ -7,6 +7,8 @@ import cors from 'cors';
 const app = express();
 config();
 
+import QRCode from 'qrcode'
+
 import { neon } from '@neondatabase/serverless'
 const sql = neon(process.env.DATABASE_URL)
 
@@ -54,10 +56,22 @@ app.get('/home', authenticateToken, async (req, res) => {
 app.put('/update', async (req, res) => {
   var num = 9876543210;
   const { uuid } = req.body;
-  console.log(uuid)
+  console.log(uuid);
+  QRCode.toDataURL(uuid)
+  .then(url => {
+    console.log(url)
+  })
+  .catch(err => {
+    console.error(err)
+  })
   const result = await sql`UPDATE users SET phone_number=${num} WHERE uuid=${uuid} returning *`;
   res.send(result);
 })
+
+
+
+// With promises
+
 
 const port = parseInt(process.env.PORT) || 3000;
 app.listen(port, () => {
