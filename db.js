@@ -42,28 +42,25 @@ const dbLoginCheck = async (email, password) => {
 
 const dbSignupCheck = async (username, email, password) => {
 
+    let trimmedUser = username.trim()
+
     try {
         const result = await sql`SELECT * FROM users WHERE email=${email}`;
-        const result2 = await sql`SELECT * FROM users WHERE user_name=${username}`;
+        const result2 = await sql`SELECT * FROM users WHERE user_name=${trimmedUser}`;
 
         if (result.length == 0) {
             var salt = bcrypt.genSaltSync(10);
             var hash = bcrypt.hashSync(password, salt);
             if (result2.length == 0) {
                 try {
-                    const result = await sql`INSERT INTO users (uuid, email, password) VALUES (${uuidv4()}, ${email}, ${hash}) RETURNING email`;
+                    const result = await sql`INSERT INTO users (uuid, user_name, email, password) VALUES (${uuidv4()}, ${trimmedUser}, ${email}, ${hash}) RETURNING email`;
                     if (result[0].email == email) {
                         let token = jwt.sign(
                             { userId: result[0].uuid },
                             process.env.JWT_SECRET,
                             { expiresIn: 60 * 10 }
                         );
-                        return {
-                            status: '200',
-                            statusText: 'ok',
-                            message: "signup success",
-                            token: token
-                        }
+                        return token;
                     }
                     return "something went wrong"
                 } catch (error) {
