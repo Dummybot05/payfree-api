@@ -55,7 +55,7 @@ const dbSignupCheck = async (username, email, password) => {
                         let token = jwt.sign(
                             { userId: result[0].uuid },
                             process.env.JWT_SECRET,
-                            { expiresIn: 60 * 5 }
+                            { expiresIn: 60 * 10 }
                         );
                         return {
                             status: '200',
