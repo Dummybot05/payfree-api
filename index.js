@@ -12,7 +12,7 @@ const sql = neon(process.env.DATABASE_URL)
 
 app.use(cors({
   origin: '*',
-  methods: ['GET', 'POST'],
+  methods: ['GET', 'POST', 'PUT'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 }));
@@ -41,9 +41,22 @@ function authenticateToken(req, res, next) {
 
 app.post('/login', login);
 app.post('/signup', signup);
+
+app.get('/all', async (req, res) => {
+  const result = await sql`SELECT * FROM users`;
+  res.send(result);
+})
 app.get('/home', authenticateToken, async (req, res) => {
   const result = await sql`SELECT * FROM users WHERE uuid=${req.user.userId}`;
   res.send(result[0]);
+})
+
+app.put('/update', async (req, res) => {
+  var num = 9876543210;
+  const { uuid } = req.body;
+  console.log(uuid)
+  const result = await sql`UPDATE users SET phone_number=${num} WHERE uuid=${uuid} returning *`;
+  res.send(result);
 })
 
 const port = parseInt(process.env.PORT) || 3000;
