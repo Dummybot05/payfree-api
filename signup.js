@@ -10,8 +10,14 @@ const isValidPassword = (password) => {
     return passwordRegex.test(password);
 }
 
+const isValidUsername = (username) => {
+    const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
+    return usernameRegex.test(username);
+}
+
 const signup = (req, res) => {
-    const { email, password } = req.body;
+    const { username, email, password } = req.body;
+    username.toLowerCase();
     email.toLowerCase();
 
     if (!isValidEmail(email)) {
@@ -32,7 +38,16 @@ const signup = (req, res) => {
         return;
     }
 
-    dbSignupCheck(email, password).then(data => {
+    if (!isValidUsername(username)) {
+        res.status(400).json({
+            status: '400',
+            statusText: 'error',
+            message: 'Invalid Username format'
+        });
+        return;
+    }
+
+    dbSignupCheck(username, email, password).then(data => {
         if (data == 'signup success') {
             res.status(200).json({
                 status: '200',
