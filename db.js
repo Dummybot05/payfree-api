@@ -55,12 +55,12 @@ const dbSignupCheck = async (username, email, password) => {
                 try {
                     const result = await sql`INSERT INTO users (uuid, user_name, email, password) VALUES (${uuidv4()}, ${trimmedUser}, ${email}, ${hash}) RETURNING email`;
                     if (result[0].email == email) {
-                        let token = jwt.sign(
+                        const token = jwt.sign(
                             { userId: result[0].uuid },
                             process.env.JWT_SECRET,
                             { expiresIn: 60 * 10 }
                         );
-                        return token;
+                        return token
                     }
                     return "something went wrong"
                 } catch (error) {

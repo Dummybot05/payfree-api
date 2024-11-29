@@ -1,18 +1,18 @@
 import { dbSignupCheck } from "./db.js";
 
-const isValidEmail = (email) => {
+const isValid = (value, numb) => {
+    const usernameRegex = /^[a-z0-9_]{5,15}$/;
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    return emailRegex.test(email);
-}
-
-const isValidPassword = (password) => {
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    return passwordRegex.test(password);
-}
-
-const isValidUsername = (username) => {
-    const usernameRegex = /^[a-z0-9_]{5,20}$/;
-    return usernameRegex.test(username);
+    if (numb == 1) {
+        return usernameRegex.test(value);
+    } else if (numb == 2) {
+        return emailRegex.test(value);
+    } else if (numb == 3) {
+        return passwordRegex.test(value);
+    } else {
+        return false;
+    }
 }
 
 const signup = (req, res) => {
@@ -21,19 +21,26 @@ const signup = (req, res) => {
     let email1 = email.trim().toLowerCase(); 
     let password1 = password.trim();
 
-
-
-    if (!isValidEmail(email1)) {
-        res.status(400).json({
+    if(!isValid(username1, 1)) {
+        res.json({
             status: '400',
             statusText: 'error',
-            message: 'Invalid email format'
+            message: 'Invalid Username Format'
         });
         return;
     }
 
-    if (!isValidPassword(password1)) {
-        res.status(400).json({
+    if(!isValid(email1, 2)) {
+        res.json({
+            status: '400',
+            statusText: 'error',
+            message: 'Invalid Email Format'
+        });
+        return;
+    }
+
+    if (!isValid(password1, 3)) {
+        res.json({
             status: '400',
             statusText: 'error',
             message: 'Invalid Password format'
@@ -41,27 +48,17 @@ const signup = (req, res) => {
         return;
     }
 
-    if (!isValidUsername(username1)) {
-        res.status(400).json({
-            status: '400',
-            statusText: 'error',
-            message: 'Invalid Username format'
-        });
-        return;
-    }
-
     dbSignupCheck(username1, email1, password1).then(data => {
-        if (data.startsWith('e')) {
+        if (data.startsWith('ey')) {
             res.status(200).json({
                 status: '200',
-                statusText: 'ok',
-                message: data
+                statusText: 'ok'
             });
         } else {
             res.status(400).json({
                 status: '400',
                 statusText: 'error',
-                message: data
+                message: 'something error'
             });
         }
         return

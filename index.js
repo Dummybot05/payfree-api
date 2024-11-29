@@ -36,7 +36,7 @@ function authenticateToken(req, res, next) {
       res.status(403).json({ message: 'Invalid token' });
       return; 
     }
-    req.user = user;
+    req.token = user;
     next();
   });
 }
