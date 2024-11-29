@@ -22,7 +22,7 @@ const dbLoginCheck = async (email, password) => {
                 let token = jwt.sign(
                     { userId: result[0].uuid },
                     process.env.JWT_SECRET,
-                    { expiresIn: 60 * 5 }
+                    { expiresIn: 60 * 10 }
                 );
                 return {
                     status: '200',
@@ -61,7 +61,12 @@ const dbSignupCheck = async (username, email, password) => {
                             process.env.JWT_SECRET,
                             { expiresIn: 60 * 10 }
                         );
-                        return token;
+                        return {
+                            status: '200',
+                            statusText: 'ok',
+                            message: "signup success",
+                            token: token
+                        }
                     }
                     return "something went wrong"
                 } catch (error) {

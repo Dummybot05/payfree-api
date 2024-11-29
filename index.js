@@ -49,6 +49,7 @@ app.get('/all', async (req, res) => {
   res.send(result);
 })
 app.get('/home', authenticateToken, async (req, res) => {
+  console.log(req.token)
   const result = await sql`SELECT * FROM users WHERE uuid=${req.token.userId}`;
   res.send(result[0]);
 })

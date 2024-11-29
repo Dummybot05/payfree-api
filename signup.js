@@ -49,20 +49,16 @@ const signup = (req, res) => {
     }
 
     dbSignupCheck(username1, email1, password1).then(data => {
-        if (data.startsWith('e')) {
-            res.json({
-                status: '200',
-                statusText: 'ok',
-                token: data
-            });
-        } else {
-            res.json({
-                status: '400',
-                statusText: 'error',
-                message: data
-            });
+        if (data.statusText == 'ok') {
+            res.status(200).json(data);
+            return;
         }
-        return
+        res.status(400).json({
+            status: '400',
+            statusText: 'error',
+            message: data
+        });
+        return;
     })
 }
 
