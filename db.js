@@ -57,9 +57,9 @@ const dbSignupCheck = async (username, email, password) => {
             var hash = bcrypt.hashSync(trimmedPassword, salt);
             if (result2.length == 0) {
                 try {
-                    const result = await sql`INSERT INTO users (uuid, user_name, email, password) VALUES (${uuidv4()}, ${trimmedUser}, ${trimmedEmail}, ${hash}) RETURNING email`;
+                    const result = await sql`INSERT INTO users (uuid, user_name, email, password) VALUES (${uuidv4()}, ${trimmedUser}, ${trimmedEmail}, ${hash}) RETURNING email, uuid`;
                     if (result[0].email == trimmedEmail) {
-                        const token = jwt.sign(
+                        let token = jwt.sign(
                             { userId: result[0].uuid },
                             process.env.JWT_SECRET,
                             { expiresIn: 60 * 10 }
