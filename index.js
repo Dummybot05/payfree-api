@@ -31,12 +31,12 @@ function authenticateToken(req, res, next) {
     res.status(401).json({ message: 'Access denied' });
     return 
   }
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+  jwt.verify(token, process.env.JWT_SECRET, (err, token) => {
     if (err) {
       res.status(403).json({ message: 'Invalid token' });
       return; 
     }
-    req.token = user;
+    req.token = token;
     next();
   });
 }
@@ -68,11 +68,6 @@ app.put('/update', async (req, res) => {
   const result = await sql`UPDATE users SET phone_number=${num} WHERE uuid=${uuid} returning *`;
   res.send(result);
 })
-
-
-
-// With promises
-
 
 const port = parseInt(process.env.PORT) || 3000;
 app.listen(port, () => {

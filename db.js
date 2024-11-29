@@ -8,8 +8,11 @@ config();
 const sql = neon(process.env.DATABASE_URL);
 
 const dbLoginCheck = async (email, password) => {
+    const trimmedEmail = email.trim().toLowerCase();
+    const trimmedPassword = password.trim();
+
     try {
-        const result = await sql`SELECT password, uuid FROM users WHERE email=${email}`;
+        const result = await sql`SELECT password, uuid FROM users WHERE email=${trimmedEmail}`;
         if (result.length == 0) {
             return "email id does not exist"
         }
@@ -17,7 +20,7 @@ const dbLoginCheck = async (email, password) => {
             return "something went wrong"
         }
         if (result.length == 1) {
-            var comparePass = bcrypt.compareSync(password, result[0].password);
+            var comparePass = bcrypt.compareSync(trimmedPassword, result[0].password);
             if (comparePass) {
                 let token = jwt.sign(
                     { userId: result[0].uuid },
@@ -35,7 +38,7 @@ const dbLoginCheck = async (email, password) => {
         }
         return "something went wrong"
     } catch (error) {
-        return error.message
+        return `SQL Error -> ${error.message}`;
     }
 }
 
@@ -70,7 +73,7 @@ const dbSignupCheck = async (username, email, password) => {
                     }
                     return "something went wrong"
                 } catch (error) {
-                    return error.message
+                    return `SQL Error -> ${error.message}`;
                 }
             } else {
                 return "user already exist with this username";
@@ -88,7 +91,7 @@ const dbSignupCheck = async (username, email, password) => {
         return false;
 
     } catch (error) {
-        return error.message;
+        return `SQL Error -> ${error.message}`;
     }
 }
 
