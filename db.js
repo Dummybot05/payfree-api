@@ -5,7 +5,6 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 config();
 
-
 const sql = neon(process.env.DATABASE_URL);
 
 const dbLoginCheck = async (email, password) => {
@@ -42,25 +41,27 @@ const dbLoginCheck = async (email, password) => {
 
 const dbSignupCheck = async (username, email, password) => {
 
-    let trimmedUser = username.trim()
+    let trimmedUser = username.trim().toLowerCase();
+    let trimmedEmail = email.trim().toLowerCase();
+    let trimmedPassword = password.trim();
 
     try {
-        const result = await sql`SELECT * FROM users WHERE email=${email}`;
+        const result = await sql`SELECT * FROM users WHERE email=${trimmedEmail}`;
         const result2 = await sql`SELECT * FROM users WHERE user_name=${trimmedUser}`;
 
         if (result.length == 0) {
             var salt = bcrypt.genSaltSync(10);
-            var hash = bcrypt.hashSync(password, salt);
+            var hash = bcrypt.hashSync(trimmedPassword, salt);
             if (result2.length == 0) {
                 try {
-                    const result = await sql`INSERT INTO users (uuid, user_name, email, password) VALUES (${uuidv4()}, ${trimmedUser}, ${email}, ${hash}) RETURNING email`;
-                    if (result[0].email == email) {
+                    const result = await sql`INSERT INTO users (uuid, user_name, email, password) VALUES (${uuidv4()}, ${trimmedUser}, ${trimmedEmail}, ${hash}) RETURNING email`;
+                    if (result[0].email == trimmedEmail) {
                         const token = jwt.sign(
                             { userId: result[0].uuid },
                             process.env.JWT_SECRET,
                             { expiresIn: 60 * 10 }
                         );
-                        return token
+                        return token;
                     }
                     return "something went wrong"
                 } catch (error) {
@@ -69,7 +70,6 @@ const dbSignupCheck = async (username, email, password) => {
             } else {
                 return "user already exist with this username";
             }
-
         }
 
         if (result.length == 1) {
