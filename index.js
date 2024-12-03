@@ -63,7 +63,6 @@ app.get('/home', authenticateToken, async (req, res) => {
 
 app.get('/showqr', authenticateToken, async (req, res) => {
   const result = await sql`SELECT uuid FROM users WHERE uuid=${req.token.userId}`;
-  console.log(result)
   QRCode.toDataURL(result[0].uuid)
   .then(url => {
     res.send(url)
@@ -72,6 +71,30 @@ app.get('/showqr', authenticateToken, async (req, res) => {
     res.send(err.message)
   })
 })
+
+app.get('/history', authenticateToken, async (req, res) => {
+  try {
+    const result = await sql`SELECT * FROM transactions WHERE uuid=${req.token.userId}`;
+    const output = [];
+
+    for (const data of result) {
+      const result2 = await sql`SELECT user_name, profile_picture_url FROM users WHERE uuid=${data.reciever_id}`;
+      const enrichedData = {
+        user_name: result2[0].user_name,
+        profile_picture_url: result2[0].profile_picture_url,
+        money: data.sent_money,
+        date: data.created_date,
+      };
+      output.push(enrichedData);
+    }
+
+    res.send(output);
+  } catch (err) {
+    console.error("Error fetching transaction history:", err);
+    res.status(500).send("An error occurred while fetching transaction history.");
+  }
+});
+
 
 app.put('/update', async (req, res) => {
   var num = 9876543210;
