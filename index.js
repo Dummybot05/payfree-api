@@ -95,6 +95,16 @@ app.get('/history', authenticateToken, async (req, res) => {
   }
 });
 
+app.put('/cashupdate', authenticateToken, async (req, res) => {
+  const { money } = req.body;
+  var result = await sql`UPDATE users SET balance=${money} WHERE uuid=${req.token.userId} returning 1`;
+  if (result) {
+    res.send('success')
+  } else {
+    res.send('not success')
+  }
+})
+
 
 app.put('/update', async (req, res) => {
   var num = 9876543210;
