@@ -49,10 +49,28 @@ app.get('/all', async (req, res) => {
   const result = await sql`SELECT * FROM users`;
   res.send(result);
 })
+app.get('/profile', authenticateToken, async (req, res) => {
+  console.log(req.token)
+  const result = await sql`SELECT * FROM users WHERE uuid=${req.token.userId}`;
+  res.send(result[0]);
+})
+
 app.get('/home', authenticateToken, async (req, res) => {
   console.log(req.token)
   const result = await sql`SELECT * FROM users WHERE uuid=${req.token.userId}`;
   res.send(result[0]);
+})
+
+app.get('/showqr', authenticateToken, async (req, res) => {
+  const result = await sql`SELECT uuid FROM users WHERE uuid=${req.token.userId}`;
+  console.log(result)
+  QRCode.toDataURL(result[0].uuid)
+  .then(url => {
+    res.send(url)
+  })
+  .catch(err => {
+    res.send(err.message)
+  })
 })
 
 app.put('/update', async (req, res) => {
