@@ -45,6 +45,17 @@ function authenticateToken(req, res, next) {
 app.post('/login', login);
 app.post('/signup', signup);
 
+app.post("/update-transaction", authenticateToken, async (req, res) => {
+  var userId = req.token.userId;
+  var { reciever_id, money } = req.body;
+  const result = await sql`INSERT INTO transactions reciever_id, sent_money VALUES (${reciever_id}, ${money}) returning 1`;
+  if(result) {
+    res.send('success');
+  } else {
+    res.send('failed');
+  }
+})
+
 app.get('/all', async (req, res) => {
   const result = await sql`SELECT * FROM users`;
   res.send(result);
@@ -98,6 +109,7 @@ app.get('/history', authenticateToken, async (req, res) => {
 app.put('/cashupdate', authenticateToken, async (req, res) => {
   const { money } = req.body;
   var result = await sql`UPDATE users SET balance=${money} WHERE uuid=${req.token.userId} returning 1`;
+
   if (result) {
     res.send('success')
   } else {
@@ -107,9 +119,11 @@ app.put('/cashupdate', authenticateToken, async (req, res) => {
 
 app.put('/editdetails', authenticateToken, async (req, res) => {
    var token = req.token;
-   const { user_name, profile_picture_url } = req.body;
+   const { firstname, lastname } = req.body;
+   console.log(firstname)
 
-   var result = await sql`UPDATE users SET user_name=${user_name}, profile_picture_url=${profile_picture_url} WHERE uuid=${token.userId} returning 1`;
+   var result = await sql`UPDATE users SET first_name=${firstname}, last_name=${lastname} WHERE uuid=${token.userId} returning *`;
+   // console.log(result)
    if (result) {
     res.send('success')
   } else {
