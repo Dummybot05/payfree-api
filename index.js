@@ -48,7 +48,8 @@ app.post('/signup', signup);
 app.post("/update-transaction", authenticateToken, async (req, res) => {
   var userId = req.token.userId;
   var { reciever_id, money } = req.body;
-  const result = await sql`INSERT INTO transactions reciever_id, sent_money VALUES (${reciever_id}, ${money}) returning 1`;
+  console.log(req.body)
+  const result = await sql`INSERT INTO transactions (reciever_id, sent_money, uuid) VALUES (${reciever_id}, ${money}, ${userId}) returning 1`;
   if(result) {
     res.send('success');
   } else {
