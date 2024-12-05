@@ -105,6 +105,17 @@ app.put('/cashupdate', authenticateToken, async (req, res) => {
   }
 })
 
+app.put('/editdetails', authenticateToken, async (req, res) => {
+   var token = req.token;
+   const { user_name, profile_picture_url } = req.body;
+
+   var result = await sql`UPDATE users SET user_name=${user_name}, profile_picture_url=${profile_picture_url} WHERE uuid=${token.userId} returning 1`;
+   if (result) {
+    res.send('success')
+  } else {
+    res.send('not success')
+  }
+})
 
 app.put('/update', async (req, res) => {
   var num = 9876543210;
