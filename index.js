@@ -48,13 +48,18 @@ app.post('/signup', signup);
 app.post("/update-transaction", authenticateToken, async (req, res) => {
   var userId = req.token.userId;
   var { reciever_id, money } = req.body;
-  console.log(req.body)
-  const result = await sql`INSERT INTO transactions (reciever_id, sent_money, uuid) VALUES (${reciever_id}, ${money}, ${userId}) returning 1`;
-  if(result) {
-    res.send('success');
+  const actualMon = await sql`select balance from users where uuid=${userId}`
+  if(actualMon[0].balance > money) {
+    const result = await sql`INSERT INTO transactions (reciever_id, sent_money, uuid) VALUES (${reciever_id}, ${money}, ${userId}) returning 1`;
+    if(result) {
+      res.send('success');
+    } else {
+      res.send('failed');
+    }
   } else {
-    res.send('failed');
+    res.send(`UH-OH send money less than ${actualMon[0].balance}`)
   }
+  
 })
 
 app.get('/all', async (req, res) => {
