@@ -52,9 +52,12 @@ app.post("/update-transaction", authenticateToken, async (req, res) => {
   if(actualMon[0].balance > money) {
     const result = await sql`INSERT INTO transactions (reciever_id, sent_money, uuid) VALUES (${reciever_id}, ${money}, ${userId}) returning 1`;
     if(result) {
-      res.send('success');
-    } else {
-      res.send('failed');
+      const updateMon = await sql`UPDATE users SET balance=${actualMon[0].balance - money} WHERE uuid=${userId} returning 1`;
+      if(updateMon) {
+        res.send('success');
+      } else {
+        res.send('failed');
+      }
     }
   } else {
     res.send(`UH-OH send money less than ${actualMon[0].balance}`)
