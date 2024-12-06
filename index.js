@@ -43,6 +43,16 @@ app.get('/', (req, res) => {
 app.post('/login', login);
 app.post('/signup', signup);
 
+app.get('/home', authenticateToken, async (req, res) => {
+  const result = await sql`SELECT * FROM users WHERE uuid=${req.user.uuid} AND email=${req.user.email}`;
+  res.send(result[0]);
+})
+
+app.get('/showqr', authenticateToken, async (req, res) => {
+  const qrcode = await QRCode.toDataURL(req.user.uuid);
+  res.send(qrcode);
+})
+
 app.post("/update-transaction", authenticateToken, async (req, res) => {
   var userId = req.token.userId;
   var { reciever_id, money } = req.body;
@@ -60,27 +70,6 @@ app.post("/update-transaction", authenticateToken, async (req, res) => {
   } else {
     res.send(`UH-OH send money less than ${actualMon[0].balance}`)
   }
-})
-
-app.get('/all', async (req, res) => {
-  const result = await sql`SELECT * FROM users`;
-  res.send(result);
-})
-
-app.get('/home', authenticateToken, async (req, res) => {
-  const result = await sql`SELECT * FROM users WHERE uuid=${req.user.uuid} AND email=${req.user.email}`;
-  res.send(result[0]);
-})
-
-app.get('/showqr', authenticateToken, async (req, res) => {
-  const result = await sql`SELECT uuid FROM users WHERE uuid=${req.user.uuid}`;
-  QRCode.toDataURL(result[0].uuid)
-    .then(url => {
-      res.send(url)
-    })
-    .catch(err => {
-      res.send(err.message)
-    })
 })
 
 app.get('/history', authenticateToken, async (req, res) => {
