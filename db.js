@@ -1,6 +1,7 @@
 import { neon } from "@neondatabase/serverless";
 import { config } from "dotenv";
 import bcrypt from 'bcryptjs';
+import isValidRegex from "./validation";
 config();
 
 const sql = neon(process.env.DATABASE_URL);
@@ -150,4 +151,58 @@ const dbSignupCheck = async (uuid, username, email, password) => {
     }
 }
 
-export { dbLoginCheck, dbSignupCheck };
+// Edit details starts here
+
+const editDetails = async (uuid, username, firstname, lastname, email, dob, phone_number, language, gender, region, bio, propicurl, token) => {
+    if(!isValidRegex(username, 1)) {
+        return { accept: false, message: "Invalid Username" };
+    }
+    if(!isValidRegex(firstname, 4)) {
+        return { accept: false, message: "Invalid Firstname" };
+    }
+    if(!isValidRegex(lastname, 4)) {
+        return { accept: false, message: "Invalid Lastname" };
+    }
+    if(!isValidRegex(email, 2)) {
+        return { accept: false, message: "Invalid Email" };
+    }
+    if(!isValidRegex(phone_number, 4)) {
+        return { accept: false, message: "Invalid Phone Number" };
+    }
+    if(!isValidRegex(language, 4)) {
+        return { accept: false, message: "Invalid Language" };
+    }
+    if(!isValidRegex(region, 4)) {
+        return { accept: false, message: "Invalid Region" };
+    }
+    if(!isValidRegex(bio, 4)) {
+        return { accept: false, message: "Invalid Bio" };
+    }
+    if(!isValidRegex(propicurl, 4)) {
+        return { accept: false, message: "Invalid Profile Picture URL" };
+    }
+    if(!isValidRegex(dob, 4)) {
+        return { accept: false, message: "Invalid Date of Birth" };
+    }
+
+    const checkUsernameFirst = await checkUsernameExistSignup(username);
+    if (!checkUsernameFirst.accept) {
+        return checkUsernameFirst;
+    }
+
+    const checkEmailFirst = await checkEmailExistSignup(email);
+    if (!checkEmailFirst.accept) {
+        return checkEmailFirst;
+    }
+
+    try {
+        const result = await sql`UPDATE users SET user_name=${username}, first_name=${firstname}, last_name=${lastname} email=${email}, date_of_birth=${dob}, phone_number=${phone_number}, language=${language}, gender=${gender}, region=${region}, bio=${bio}, profile_picture_url=${propicurl}  WHERE uuid=${uuid} returning *`;
+        if (result[0].email == email) {
+            return { accept: true, message: result[0] };
+        }
+        return { accept: false, message: 'Something went wrong' };
+    } catch (error) {
+        return { accept: false, message: error.message };
+    }
+}
+export { dbLoginCheck, dbSignupCheck, editDetails };

@@ -8,17 +8,16 @@ import QRCode from 'qrcode'
 import { neon } from '@neondatabase/serverless';
 const app = express();
 config();
+import { editDetails } from './db.js';
 
-const sql = neon(process.env.DATABASE_URL)
-
+const sql = neon(process.env.DATABASE_URL);
+app.use(express.json());
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 }));
-
-app.use(express.json());
 
 function authenticateToken(req, res, next) {
   const token = req.header('Authorization')?.split(' ')[1];
@@ -51,6 +50,17 @@ app.get('/home', authenticateToken, async (req, res) => {
 app.get('/showqr', authenticateToken, async (req, res) => {
   const qrcode = await QRCode.toDataURL(req.user.uuid);
   res.send(qrcode);
+})
+
+app.put('/editdetails', authenticateToken, async (req, res) => {
+  const token = req.user.uuid;
+  const { propicurl, username, firstname, lastname, email, dob, phone_number, language, gender, region, bio } = req.body;
+  const saveDetails = await editDetails(token, username, firstname, lastname, email, dob, phone_number, language, gender, region, bio, propicurl, token);
+  if (saveDetails.accept) {
+    res.send(saveDetails.message);
+  } else {
+    res.send(saveDetails)
+  }
 })
 
 app.post("/update-transaction", authenticateToken, async (req, res) => {
@@ -106,34 +116,7 @@ app.put('/cashupdate', authenticateToken, async (req, res) => {
   }
 })
 
-app.put('/editdetails', authenticateToken, async (req, res) => {
-  var token = req.token;
-  const { firstname, lastname } = req.body;
-  console.log(firstname)
 
-  var result = await sql`UPDATE users SET first_name=${firstname}, last_name=${lastname} WHERE uuid=${token.userId} returning *`;
-  // console.log(result)
-  if (result) {
-    res.send('success')
-  } else {
-    res.send('not success')
-  }
-})
-
-app.put('/update', async (req, res) => {
-  var num = 9876543210;
-  const { uuid } = req.body;
-  console.log(uuid);
-  QRCode.toDataURL(uuid)
-    .then(url => {
-      console.log(url)
-    })
-    .catch(err => {
-      console.error(err)
-    })
-  const result = await sql`UPDATE users SET phone_number=${num} WHERE uuid=${uuid} returning *`;
-  res.send(result);
-})
 
 const port = parseInt(process.env.PORT) || 3000;
 app.listen(port, () => {
