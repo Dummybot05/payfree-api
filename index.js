@@ -73,7 +73,7 @@ app.get('/home', authenticateToken, async (req, res) => {
 })
 
 app.get('/showqr', authenticateToken, async (req, res) => {
-  const result = await sql`SELECT uuid FROM users WHERE uuid=${req.token.userId}`;
+  const result = await sql`SELECT uuid FROM users WHERE uuid=${req.user.uuid}`;
   QRCode.toDataURL(result[0].uuid)
     .then(url => {
       res.send(url)
