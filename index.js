@@ -20,10 +20,6 @@ app.use(cors({
 
 app.use(express.json());
 
-app.get('/', (req, res) => {
-  res.send(`Hello World!`);
-});
-
 function authenticateToken(req, res, next) {
   const token = req.header('Authorization')?.split(' ')[1];
   if (!token) {
@@ -39,6 +35,10 @@ function authenticateToken(req, res, next) {
     next();
   });
 }
+
+app.get('/', (req, res) => {
+  res.send(`Hello World!`);
+});
 
 app.post('/login', login);
 app.post('/signup', signup);
@@ -60,17 +60,11 @@ app.post("/update-transaction", authenticateToken, async (req, res) => {
   } else {
     res.send(`UH-OH send money less than ${actualMon[0].balance}`)
   }
-
 })
 
 app.get('/all', async (req, res) => {
   const result = await sql`SELECT * FROM users`;
   res.send(result);
-})
-app.get('/profile', authenticateToken, async (req, res) => {
-  console.log(req.token)
-  const result = await sql`SELECT * FROM users WHERE uuid=${req.token.userId}`;
-  res.send(result[0]);
 })
 
 app.get('/home', authenticateToken, async (req, res) => {
