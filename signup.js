@@ -1,65 +1,49 @@
 import { dbSignupCheck } from "./db.js";
+import isValidRegex from "./validation.js";
+import { v4 as uuidv4 } from 'uuid';
+import jwt from 'jsonwebtoken';
 
-const isValid = (value, numb) => {
-    const usernameRegex = /^[a-z0-9_]{5,15}$/;
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    if (numb == 1) {
-        return usernameRegex.test(value);
-    } else if (numb == 2) {
-        return emailRegex.test(value);
-    } else if (numb == 3) {
-        return passwordRegex.test(value);
-    } else {
-        return false;
-    }
-}
-
-const signup = (req, res) => {
+const signup = async (req, res) => {
     const { username, email, password } = req.body;
-    let username1 = username.trim().toLowerCase();
-    let email1 = email.trim().toLowerCase(); 
-    let password1 = password.trim();
+    const username1 = username.trim().toLowerCase();
+    const email1 = email.trim().toLowerCase();
+    const password1 = password.trim();
+    const checkUsernameRegex = isValidRegex(username1, 1);
+    const checkEmailRegex = isValidRegex(email1, 2);
+    const checkPasswordRegex = isValidRegex(password1, 3);
 
-    if(!isValid(username1, 1)) {
-        res.json({
-            status: '400',
-            statusText: 'error',
-            message: 'Invalid Username Format'
-        });
+    if (!checkUsernameRegex) {
+        res.json({ accept: false, message: 'Invalid Username Format' });
         return;
     }
 
-    if(!isValid(email1, 2)) {
-        res.json({
-            status: '400',
-            statusText: 'error',
-            message: 'Invalid Email Format'
-        });
+    if (!checkEmailRegex) {
+        res.json({ accept: false, message: 'Invalid Email Format (example@domain.com)' });
         return;
     }
 
-    if (!isValid(password1, 3)) {
-        res.json({
-            status: '400',
-            statusText: 'error',
-            message: 'Invalid Password format'
-        });
+    if (!checkPasswordRegex) {
+        res.json({ accept: false, message: 'Invalid Password format' });
         return;
     }
 
-    dbSignupCheck(username1, email1, password1).then(data => {
-        if (data.statusText == 'ok') {
-            res.status(200).json(data);
-            return;
-        }
-        res.status(400).json({
-            status: '400',
-            statusText: 'error',
-            message: data
-        });
+    const signupCheck = await dbSignupCheck(uuidv4(), username1, email1, password1);
+    if (signupCheck.accept) {
+        const token = jwt.sign(
+            {
+                uuid: signupCheck.message,
+                email: email1,
+            },
+            process.env.JWT_SECRET,
+            { 
+                expiresIn: 60 * 10
+            }
+        );
+        res.json({ accept: true, message: "Signup Success", token: token });
         return;
-    })
+    }
+    res.json({ accept: false, message: signupCheck.message });
+    return;
 }
 
 export default signup;

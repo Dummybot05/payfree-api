@@ -4,17 +4,16 @@ import signup from './signup.js';
 import { config } from 'dotenv';
 import jwt from 'jsonwebtoken';
 import cors from 'cors';
+import QRCode from 'qrcode'
+import { neon } from '@neondatabase/serverless';
 const app = express();
 config();
 
-import QRCode from 'qrcode'
-
-import { neon } from '@neondatabase/serverless'
 const sql = neon(process.env.DATABASE_URL)
 
 app.use(cors({
   origin: '*',
-  methods: ['GET', 'POST', 'PUT'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 }));
@@ -28,16 +27,15 @@ app.get('/', (req, res) => {
 function authenticateToken(req, res, next) {
   const token = req.header('Authorization')?.split(' ')[1];
   if (!token) {
-    res.status(401).json({ message: 'Access denied' });
-    return 
+    res.json({ accept: false, message: 'Access denied' });
+    return;
   }
-  jwt.verify(token, process.env.JWT_SECRET, (err, token) => {
-    if (err) {
-      res.status(403).json({ message: 'Invalid token' });
-      return; 
+  jwt.verify(token, process.env.JWT_SECRET, (error, data) => {
+    if (error) {
+      res.json({ accept: false, message: error.message });
+      return;
     }
-    console.log(token)
-    req.token = token;
+    req.user = data;
     next();
   });
 }
@@ -49,11 +47,11 @@ app.post("/update-transaction", authenticateToken, async (req, res) => {
   var userId = req.token.userId;
   var { reciever_id, money } = req.body;
   const actualMon = await sql`select balance from users where uuid=${userId}`
-  if(actualMon[0].balance > money) {
+  if (actualMon[0].balance > money) {
     const result = await sql`INSERT INTO transactions (reciever_id, sent_money, uuid) VALUES (${reciever_id}, ${money}, ${userId}) returning 1`;
-    if(result) {
+    if (result) {
       const updateMon = await sql`UPDATE users SET balance=${parseInt(actualMon[0].balance) - parseInt(money)} WHERE uuid=${userId} returning 1`;
-      if(updateMon) {
+      if (updateMon) {
         res.send('success');
       } else {
         res.send('failed');
@@ -62,7 +60,7 @@ app.post("/update-transaction", authenticateToken, async (req, res) => {
   } else {
     res.send(`UH-OH send money less than ${actualMon[0].balance}`)
   }
-  
+
 })
 
 app.get('/all', async (req, res) => {
@@ -76,20 +74,19 @@ app.get('/profile', authenticateToken, async (req, res) => {
 })
 
 app.get('/home', authenticateToken, async (req, res) => {
-  console.log(req.token)
-  const result = await sql`SELECT * FROM users WHERE uuid=${req.token.userId}`;
+  const result = await sql`SELECT * FROM users WHERE uuid=${req.user.uuid} AND email=${req.user.email}`;
   res.send(result[0]);
 })
 
 app.get('/showqr', authenticateToken, async (req, res) => {
   const result = await sql`SELECT uuid FROM users WHERE uuid=${req.token.userId}`;
   QRCode.toDataURL(result[0].uuid)
-  .then(url => {
-    res.send(url)
-  })
-  .catch(err => {
-    res.send(err.message)
-  })
+    .then(url => {
+      res.send(url)
+    })
+    .catch(err => {
+      res.send(err.message)
+    })
 })
 
 app.get('/history', authenticateToken, async (req, res) => {
@@ -127,13 +124,13 @@ app.put('/cashupdate', authenticateToken, async (req, res) => {
 })
 
 app.put('/editdetails', authenticateToken, async (req, res) => {
-   var token = req.token;
-   const { firstname, lastname } = req.body;
-   console.log(firstname)
+  var token = req.token;
+  const { firstname, lastname } = req.body;
+  console.log(firstname)
 
-   var result = await sql`UPDATE users SET first_name=${firstname}, last_name=${lastname} WHERE uuid=${token.userId} returning *`;
-   // console.log(result)
-   if (result) {
+  var result = await sql`UPDATE users SET first_name=${firstname}, last_name=${lastname} WHERE uuid=${token.userId} returning *`;
+  // console.log(result)
+  if (result) {
     res.send('success')
   } else {
     res.send('not success')
@@ -145,12 +142,12 @@ app.put('/update', async (req, res) => {
   const { uuid } = req.body;
   console.log(uuid);
   QRCode.toDataURL(uuid)
-  .then(url => {
-    console.log(url)
-  })
-  .catch(err => {
-    console.error(err)
-  })
+    .then(url => {
+      console.log(url)
+    })
+    .catch(err => {
+      console.error(err)
+    })
   const result = await sql`UPDATE users SET phone_number=${num} WHERE uuid=${uuid} returning *`;
   res.send(result);
 })
