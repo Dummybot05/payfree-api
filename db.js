@@ -1,7 +1,7 @@
 import { neon } from "@neondatabase/serverless";
 import { config } from "dotenv";
 import bcrypt from 'bcryptjs';
-import isValidRegex from "./validation";
+import isValidRegex from "./validation.js";
 config();
 
 const sql = neon(process.env.DATABASE_URL);
