@@ -1,16 +1,12 @@
 import express from 'express';
-import login from './login.js';
-import signup from './signup.js';
 import jwt from 'jsonwebtoken';
 import cors from 'cors';
 import QRCode from 'qrcode';
-import { config } from 'dotenv';
+import dotenv from 'dotenv';
 import { neon } from '@neondatabase/serverless';
-const app = express();
-config();
-import { editDetails } from './db.js';
-
-const sql = neon(process.env.DATABASE_URL);
+import login from './components/login.js';
+import signup from './components/signup.js';
+import { editDetails } from './components/db.js';
 
 const corsOption = {
   origin: '*',
@@ -18,6 +14,11 @@ const corsOption = {
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 }
+
+const sql = neon(process.env.DATABASE_URL);
+const app = express();
+dotenv.config();
+
 app.use(express.json());
 app.use(cors(corsOption));
 
@@ -48,6 +49,16 @@ app.post('/signup', signup);
 app.get('/home', authenticateToken, async (req, res) => {
   const uuid = req.user.uuid;
   try {
+    const [ result ] = await sql`SELECT user_name, uuid, balance FROM users WHERE uuid=${uuid}`;
+    res.send({ accept: true, message: result });
+  } catch (error) {
+    res.send({ accept: false, message: `SQL Error: ${error.message}` })
+  }
+})
+
+app.get('/profile', authenticateToken, async (req, res) => {
+  const uuid = req.user.uuid;
+  try {
     const [ result ] = await sql`SELECT * FROM users WHERE uuid=${uuid}`;
     res.send({ accept: true, message: result });
   } catch (error) {
@@ -56,7 +67,8 @@ app.get('/home', authenticateToken, async (req, res) => {
 })
 
 app.get('/showqr', authenticateToken, async (req, res) => {
-  const qrcode = await QRCode.toDataURL(req.user.uuid);
+  const uuid = req.user.uuid;
+  const qrcode = await QRCode.toDataURL(uuid);
   res.send(qrcode);
 })
 
@@ -102,11 +114,15 @@ app.post("/update-transaction", authenticateToken, async (req, res) => {
 })
 
 app.get('/history', authenticateToken, async (req, res) => {
+  const uuid = req.user.uuid;
   try {
-    const result = await sql`SELECT * FROM transactions WHERE uuid=${req.user.uuid} OR reciever_id=${req.user.uuid}`;
-    const output = [];
+    const [ senderResult ] = await sql`SELECT * FROM transactions WHERE uuid=${uuid}`;
+    const [ recieverResult ] = await sql`SELECT * FROM transactions WHERE reciever_id=${uuid}`;
+  
+    for (const data of senderResult) {
+      for (const data2 of recieverResult) {
 
-    for (const data of result) {
+      }
       const result2 = await sql`SELECT user_name, profile_picture_url FROM users WHERE uuid=${data.reciever_id}`;
       const enrichedData = {
         user_name: result2[0].user_name,
