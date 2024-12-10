@@ -83,7 +83,7 @@ app.post('/paycid', authenticateToken, async(req, res) => {
 })
 
 app.post("/update-transaction", authenticateToken, async (req, res) => {
-  var userId = req.token.userId;
+  var userId = req.user.uuid;
   var { reciever_id, money } = req.body;
   const actualMon = await sql`select balance from users where uuid=${userId}`
   if (actualMon[0].balance > money) {
