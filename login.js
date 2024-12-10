@@ -4,6 +4,14 @@ import jwt from 'jsonwebtoken';
 
 const login = async (req, res) => {
     const { email, password } = req.body;
+    if(!email) {
+        res.json({ accept: false, message: 'Email is required' });
+        return;
+    }
+    if(!password) {
+        res.json({ accept: false, message: 'Password is required' });
+        return;
+    }
     const email1 = email.trim().toLowerCase();
     const password1 = password.trim();
     const checkEmailRegex = isValidRegex(email1, 2);
