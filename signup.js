@@ -5,6 +5,18 @@ import jwt from 'jsonwebtoken';
 
 const signup = async (req, res) => {
     const { username, email, password } = req.body;
+    if(!username) {
+        res.json({ accept: false, message: 'Username is required' });
+        return;
+    }
+    if(!email) {
+        res.json({ accept: false, message: 'Email is required' });
+        return;
+    }
+    if(!password) {
+        res.json({ accept: false, message: 'Password is required' });
+        return;
+    }
     const username1 = username.trim().toLowerCase();
     const email1 = email.trim().toLowerCase();
     const password1 = password.trim();
