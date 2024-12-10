@@ -59,7 +59,18 @@ app.put('/editdetails', authenticateToken, async (req, res) => {
   if (saveDetails.accept) {
     res.send(saveDetails.message);
   } else {
-    res.send(saveDetails)
+    res.send(saveDetails);
+  }
+})
+
+app.post('/paycid', authenticateToken, async(req, res) => {
+  const token = req.user.uuid;
+  const { reciever_id, money } = req.body;
+  const result = await sql`INSERT INTO transactions (reciever_id, sent_money, uuid) VALUE (${reciever_id}, ${money}, ${token})`;
+  if (result) {
+    res.send('success');
+  } else {
+    res.send('failed');
   }
 })
 
