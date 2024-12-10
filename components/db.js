@@ -196,9 +196,9 @@ const editDetails = async (uuid, username, firstname, lastname, email, dob, phon
     }
 
     try {
-        const result = await sql`UPDATE users SET user_name=${username}, first_name=${firstname}, last_name=${lastname} email=${email}, date_of_birth=${dob}, phone_number=${phone_number}, language=${language}, gender=${gender}, region=${region}, bio=${bio}, profile_picture_url=${propicurl}  WHERE uuid=${uuid} returning *`;
-        if (result[0].email == email) {
-            return { accept: true, message: result[0] };
+        const [ result ] = await sql`UPDATE users SET user_name=${username}, first_name=${firstname}, last_name=${lastname} email=${email}, date_of_birth=${dob}, phone_number=${phone_number}, language=${language}, gender=${gender}, region=${region}, bio=${bio}, profile_picture_url=${propicurl}  WHERE uuid=${uuid} returning *`;
+        if (result.email == email) {
+            return { accept: true, message: result };
         }
         return { accept: false, message: 'Something went wrong' };
     } catch (error) {

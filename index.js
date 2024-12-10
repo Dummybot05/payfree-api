@@ -73,9 +73,9 @@ app.get('/showqr', authenticateToken, async (req, res) => {
 })
 
 app.put('/editdetails', authenticateToken, async (req, res) => {
-  const token = req.user.uuid;
+  const uuid = req.user.uuid;
   const { propicurl, username, firstname, lastname, email, dob, phone_number, language, gender, region, bio } = req.body;
-  const saveDetails = await editDetails(token, username, firstname, lastname, email, dob, phone_number, language, gender, region, bio, propicurl, token);
+  const saveDetails = await editDetails(uuid, username, firstname, lastname, email, dob, phone_number, language, gender, region, bio, propicurl, uuid);
   if (saveDetails.accept) {
     res.send(saveDetails.message);
   } else {
