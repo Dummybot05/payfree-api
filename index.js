@@ -1,10 +1,10 @@
 import express from 'express';
 import login from './login.js';
 import signup from './signup.js';
-import { config } from 'dotenv';
 import jwt from 'jsonwebtoken';
 import cors from 'cors';
-import QRCode from 'qrcode'
+import QRCode from 'qrcode';
+import { config } from 'dotenv';
 import { neon } from '@neondatabase/serverless';
 const app = express();
 config();

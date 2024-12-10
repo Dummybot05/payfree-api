@@ -205,4 +205,5 @@ const editDetails = async (uuid, username, firstname, lastname, email, dob, phon
         return { accept: false, message: error.message };
     }
 }
+
 export { dbLoginCheck, dbSignupCheck, editDetails };
