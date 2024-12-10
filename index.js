@@ -95,7 +95,7 @@ app.post("/update-transaction", authenticateToken, async (req, res) => {
 
 app.get('/history', authenticateToken, async (req, res) => {
   try {
-    const result = await sql`SELECT * FROM transactions WHERE uuid=${req.user.uuid}`;
+    const result = await sql`SELECT * FROM transactions WHERE uuid=${req.user.uuid} OR reciever_id=${req.user.uuid}`;
     const output = [];
 
     for (const data of result) {
@@ -111,7 +111,6 @@ app.get('/history', authenticateToken, async (req, res) => {
 
     res.send(output);
   } catch (err) {
-    console.error("Error fetching transaction history:", err);
     res.send("An error occurred while fetching transaction history.");
   }
 });
