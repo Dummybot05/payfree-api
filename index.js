@@ -11,13 +11,15 @@ config();
 import { editDetails } from './db.js';
 
 const sql = neon(process.env.DATABASE_URL);
-app.use(express.json());
-app.use(cors({
+
+const corsOption = {
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
-}));
+}
+app.use(express.json());
+app.use(cors(corsOption));
 
 function authenticateToken(req, res, next) {
   const token = req.header('Authorization')?.split(' ')[1];
@@ -40,11 +42,17 @@ app.get('/', (req, res) => {
 });
 
 app.post('/login', login);
+
 app.post('/signup', signup);
 
 app.get('/home', authenticateToken, async (req, res) => {
-  const result = await sql`SELECT * FROM users WHERE uuid=${req.user.uuid} AND email=${req.user.email}`;
-  res.send(result[0]);
+  const uuid = req.user.uuid;
+  try {
+    const [ result ] = await sql`SELECT * FROM users WHERE uuid=${uuid}`;
+    res.send({ accept: true, message: result });
+  } catch (error) {
+    res.send({ accept: false, message: `SQL Error: ${error.message}` })
+  }
 })
 
 app.get('/showqr', authenticateToken, async (req, res) => {
